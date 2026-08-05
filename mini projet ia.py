@@ -39,11 +39,6 @@ from sklearn.ensemble import (
     GradientBoostingClassifier
 )
 
-# Deep Learning (Keras / TensorFlow)
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Input
-from keras.callbacks import ModelCheckpoint
-
 warnings.filterwarnings('ignore')
 
 # ==============================================================================
@@ -120,7 +115,7 @@ best_clf_model.fit(X_class_scaled, Y_class)
 df['prediction_class'] = best_clf_model.predict(X_class_scaled)
 
 # ==============================================================================
-# 5. DEEP LEARNING (KERAS)
+# 5. DEEP LEARNING / RÉSEAU DE NEURONES (MLP MULTICOUCHE VIA SCIKIT-LEARN)
 # ==============================================================================
 top_categories = ['Classe mondiale (25+)', 'Elite (15-24)']
 if 'Categorie_Performance' in df.columns:
@@ -143,25 +138,19 @@ if features_cols:
 
     X_app, X_test, Y_app, Y_test = train_test_split(X_dl_scaled, Y_dl, train_size=0.7, random_state=42, stratify=Y_dl)
 
-    # Réseau MLP avec Dropout
-    model_final = Sequential([
-        Input(shape=(X_dl.shape[1],)),
-        Dense(12, activation='relu'),
-        Dropout(0.2),
-        Dense(8, activation='relu'),
-        Dense(1, activation='sigmoid')
-    ])
-
-    model_final.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
-
-    checkpoint = ModelCheckpoint('meilleur_modele_premier_league.keras', monitor='val_accuracy', save_best_only=True, mode='max', verbose=0)
-
-    model_final.fit(
-        X_app, Y_app,
-        validation_data=(X_test, Y_test),
-        epochs=150,
-        batch_size=5,
-        callbacks=[checkpoint],
-        verbose=0
+    # Réseau MLP (2 couches cachées de 12 et 8 neurones)
+    model_final = MLPClassifier(
+        hidden_layer_sizes=(12, 8),
+        activation='relu',
+        solver='adam',
+        max_iter=150,
+        random_state=42
     )
-    print("Entraînement et sauvegarde du modèle Keras terminés.")
+
+    model_final.fit(X_app, Y_app)
+
+    # Sauvegarde du modèle au format pickle
+    with open('meilleur_modele_premier_league.pkl', 'wb') as file:
+        pickle.dump(model_final, file)
+
+    print("Entraînement et sauvegarde du modèle MLP scikit-learn terminés avec succès.")

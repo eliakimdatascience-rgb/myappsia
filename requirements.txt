@@ -4,5 +4,4 @@ matplotlib
 seaborn
 missingno
 scikit-learn
-tensorflow
-keras
+tensorflow-cpu

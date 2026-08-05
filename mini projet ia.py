@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import missingno as msno
+import streamlit as st
 
 from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -42,15 +43,16 @@ from sklearn.ensemble import (
 warnings.filterwarnings('ignore')
 
 # ==============================================================================
+# INTERFACE STREAMLIT - CONFIGURATION
+# ==============================================================================
+st.set_page_config(page_title="Premier League Analytics", layout="wide")
+st.title("⚽ Analyse et Prédictions - Premier League")
+
+# ==============================================================================
 # 1. CHARGEMENT ET PRÉTRAITEMENT DES DONNÉES
 # ==============================================================================
 
-# Chargement avec chemin relatif pour le serveur
 df = pd.read_csv("Premier_League_fr.csv")
-
-print("=== STRUCTURE DU JEU DE DONNÉES ===")
-print(f"Lignes : {df.shape[0]}, Colonnes : {df.shape[1]}")
-print(df.dtypes)
 
 # Nettoyage des doublons
 df = df.drop_duplicates()
@@ -83,8 +85,6 @@ X_df = df.drop(columns=cols_to_drop)
 X_encoded = pd.get_dummies(X_df, drop_first=True)
 X_reg = X_encoded.values.astype(np.float32)
 
-kf = KFold(n_splits=10, shuffle=True, random_state=7)
-
 # ==============================================================================
 # 3. ÉVALUATION ET ENTRAÎNEMENT DU MEILLEUR MODÈLE DE RÉGRESSION
 # ==============================================================================
@@ -115,7 +115,7 @@ best_clf_model.fit(X_class_scaled, Y_class)
 df['prediction_class'] = best_clf_model.predict(X_class_scaled)
 
 # ==============================================================================
-# 5. DEEP LEARNING / RÉSEAU DE NEURONES (MLP MULTICOUCHE VIA SCIKIT-LEARN)
+# 5. RÉSEAU DE NEURONES (MLP MULTICOUCHE VIA SCIKIT-LEARN)
 # ==============================================================================
 top_categories = ['Classe mondiale (25+)', 'Elite (15-24)']
 if 'Categorie_Performance' in df.columns:
@@ -126,7 +126,6 @@ else:
 features_cols = ['Apparitions', 'Minutes', 'Buts', 'Passes_Decisives', 
                  'Buts_Par_90', 'Passes_Decisives_Par_90', 'Contributions_But_Par_90', 'Score_Discipline']
 
-# Vérification des colonnes disponibles
 features_cols = [c for c in features_cols if c in df.columns]
 
 if features_cols:
@@ -138,7 +137,6 @@ if features_cols:
 
     X_app, X_test, Y_app, Y_test = train_test_split(X_dl_scaled, Y_dl, train_size=0.7, random_state=42, stratify=Y_dl)
 
-    # Réseau MLP (2 couches cachées de 12 et 8 neurones)
     model_final = MLPClassifier(
         hidden_layer_sizes=(12, 8),
         activation='relu',
@@ -149,8 +147,23 @@ if features_cols:
 
     model_final.fit(X_app, Y_app)
 
-    # Sauvegarde du modèle au format pickle
     with open('meilleur_modele_premier_league.pkl', 'wb') as file:
         pickle.dump(model_final, file)
 
-    print("Entraînement et sauvegarde du modèle MLP scikit-learn terminés avec succès.")
+# ==============================================================================
+# 6. AFFICHAGE DE L'APPLICATION STREAMLIT
+# ==============================================================================
+st.success("✅ Application chargée avec succès !")
+
+st.subheader("Aperçu du jeu de données avec prédictions")
+st.dataframe(df.head(10))
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Statistiques des erreurs de prédiction (Extra Trees)")
+    st.write(df['prediction_errors'].describe())
+
+with col2:
+    st.subheader("Distribution des classes prédites")
+    st.bar_chart(df['prediction_class'].value_counts())

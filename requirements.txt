@@ -1,7 +1,9 @@
-matplotlib
+tf-keras
 pandas
 numpy
-scikit-learn
+matplotlib
 seaborn
-tf-keras
 missingno
+scikit-learn
+keras
+tensorflow

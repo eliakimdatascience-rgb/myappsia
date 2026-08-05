@@ -825,5 +825,3 @@ model_final.fit(
 )
 
 print(f"Modèle sauvegardé avec succès sous : {filepath}")
-
-#"C:\Users\HP\anaconda3\envs\env_ml\python.exe" -m streamlit run "E:\COURS INSSEDS\statistique cours\MACHINE LEARNING\sanstitre0.py"
